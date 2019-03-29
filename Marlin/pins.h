@@ -171,6 +171,8 @@
   #include "pins_EINSY_RETRO.h"       // ATmega2560                                 env:rambo
 #elif MB(ELEFU_3)
   #include "pins_ELEFU_3.h"           // ATmega2560                                 env:megaatmega2560
+#elif MB(LMC_MAYR)
+  #include "pins_LMC_MAYR.h"          // ATmega1280, ATmega2560                     env:megaatmega1280 env:megaatmega2560
 #elif MB(LEAPFROG)
   #include "pins_LEAPFROG.h"          // ATmega1280, ATmega2560                     env:megaatmega1280 env:megaatmega2560
 #elif MB(MEGACONTROLLER)
