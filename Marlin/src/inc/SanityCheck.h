@@ -341,6 +341,10 @@
   #error "MAX6675_SS is now MAX6675_SS_PIN. Please update your configuration and/or pins."
 #elif defined(MAX6675_SS2)
   #error "MAX6675_SS2 is now MAX6675_SS2_PIN. Please update your configuration and/or pins."
+#elif defined(SPINDLE_LASER_ENABLE_PIN)
+  #error "SPINDLE_LASER_ENABLE_PIN is now SPINDLE_LASER_ENA_PIN. Please update your configuration and/or pins."
+#elif defined(CHAMBER_HEATER_PIN)
+  #error "CHAMBER_HEATER_PIN is now HEATER_CHAMBER_PIN. Please update your configuration and/or pins."
 #elif defined(TMC_Z_CALIBRATION)
   #error "TMC_Z_CALIBRATION has been deprecated in favor of Z_STEPPER_AUTO_ALIGN. Please update your configuration."
 #elif defined(Z_MIN_PROBE_ENDSTOP)
@@ -551,6 +555,10 @@ static_assert(Y_MAX_LENGTH >= Y_BED_SIZE, "Movement bounds (Y_MIN_POS, Y_MAX_POS
   #endif
 #endif
 
+#if defined(EVENT_GCODE_SD_STOP) && DISABLED(NOZZLE_PARK_FEATURE)
+  static_assert(NULL == strstr(EVENT_GCODE_SD_STOP, "G27"), "NOZZLE_PARK_FEATURE is required to use G27 in EVENT_GCODE_SD_STOP.");
+#endif
+
 /**
  * I2C Position Encoders
  */
@@ -605,6 +613,8 @@ static_assert(Y_MAX_LENGTH >= Y_BED_SIZE, "Movement bounds (Y_MIN_POS, Y_MAX_POS
     #error "FILAMENT_RUNOUT_SENSOR with NUM_RUNOUT_SENSORS > 5 requires FIL_RUNOUT6_PIN."
   #elif DISABLED(SDSUPPORT, PRINTJOB_TIMER_AUTOSTART)
     #error "FILAMENT_RUNOUT_SENSOR requires SDSUPPORT or PRINTJOB_TIMER_AUTOSTART."
+  #elif FILAMENT_RUNOUT_DISTANCE_MM < 0
+    #error "FILAMENT_RUNOUT_DISTANCE_MM must be greater than or equal to zero."
   #elif DISABLED(ADVANCED_PAUSE_FEATURE)
     static_assert(NULL == strstr(FILAMENT_RUNOUT_SCRIPT, "M600"), "ADVANCED_PAUSE_FEATURE is required to use M600 with FILAMENT_RUNOUT_SENSOR.");
   #endif
@@ -1758,6 +1768,9 @@ static_assert(Y_MAX_LENGTH >= Y_BED_SIZE, "Movement bounds (Y_MIN_POS, Y_MAX_POS
   + ENABLED(G3D_PANEL) \
   + (ENABLED(MINIPANEL) && DISABLED(MKS_MINI_12864)) \
   + ENABLED(MKS_MINI_12864) \
+  + ENABLED(FYSETC_MINI_12864_1_2) \
+  + ENABLED(FYSETC_MINI_12864_2_0) \
+  + ENABLED(FYSETC_MINI_12864_2_1) \
   + (ENABLED(REPRAPWORLD_KEYPAD) && DISABLED(CARTESIO_UI, ZONESTAR_LCD)) \
   + ENABLED(RIGIDBOT_PANEL) \
   + ENABLED(RA_CONTROL_PANEL) \
@@ -1773,8 +1786,37 @@ static_assert(Y_MAX_LENGTH >= Y_BED_SIZE, "Movement bounds (Y_MIN_POS, Y_MAX_POS
   + ENABLED(OLED_PANEL_TINYBOY2) \
   + ENABLED(ZONESTAR_LCD) \
   + ENABLED(ULTI_CONTROLLER) \
-  + ENABLED(EXTENSIBLE_UI)
+  + (ENABLED(EXTENSIBLE_UI) && DISABLED(MALYAN_LCD))
   #error "Please select no more than one LCD controller option."
+#endif
+
+/**
+ * FYSETC Mini 12864 RGB backlighting required
+ */
+#if EITHER(FYSETC_MINI_12864_1_2, FYSETC_MINI_12864_2_0) && DISABLED(RGB_LED)
+  #error "RGB_LED is required for FYSETC_MINI_12864 1.2 and 2.0."
+#elif EITHER(FYSETC_MINI_12864_2_0, FYSETC_MINI_12864_2_1) && DISABLED(LED_USER_PRESET_STARTUP)
+  #error "LED_USER_PRESET_STARTUP is required for FYSETC_MINI_12864 2.x displays."
+#elif ENABLED(FYSETC_MINI_12864_2_1)
+  #if DISABLED(NEOPIXEL_LED)
+    #error "NEOPIXEL_LED is required for FYSETC_MINI_12864 Rev. 2.1."
+  #elif NEOPIXEL_PIXELS != 3
+    #error "NEOPIXEL_PIXELS should be 3 for FYSETC_MINI_12864 Rev. 2.1."
+  #elif NEOPIXEL_BRIGHTNESS != 127
+    #error "NEOPIXEL_BRIGHTNESS should be 127 for FYSETC_MINI_12864 Rev. 2.1."
+  #else
+    #ifndef NEO_GRB
+      #define NEO_GRB 0xFAD
+      #define _UNDO_NEO_GRB
+    #endif
+    #if NEOPIXEL_TYPE != NEO_GRB
+      #error "NEOPIXEL_TYPE should be NEO_GRB for FYSETC_MINI_12864 Rev. 2.1."
+    #endif
+    #ifdef _UNDO_NEO_GRB
+      #undef NEO_GRB
+      #undef _UNDO_NEO_GRB
+    #endif
+  #endif
 #endif
 
 /**
